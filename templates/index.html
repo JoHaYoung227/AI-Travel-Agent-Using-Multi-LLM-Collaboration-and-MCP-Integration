@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 첫 번째 페이지: 랜딩 -->
+    <div id="landing-page" class="page active">
+        <div class="overlay"></div>
+        <div class="landing-content">
+            <h1 class="project-title">Multi-Agent AI Travel Planner</h1>
+            <p class="project-subtitle">MCP 기반 LLM 협업으로 최적의 여행 계획을 제공합니다</p>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <span class="icon">✈️</span>
+                    <h3>실시간 항공편</h3>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">🏨</span>
+                    <h3>맞춤 숙소</h3>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">🎯</span>
+                    <h3>개인화 추천</h3>
+                </div>
+            </div>
+            <button class="start-button" onclick="goToPlanner()">여행 계획 시작하기</button>
+        </div>
+    </div>
+
+    <!-- 두 번째 페이지: 입력 폼 -->
+    <div id="planner-page" class="page">
+        <div class="planner-overlay"></div>
+        <div class="planner-container">
+            <form action="/plan" method="POST" id="travelForm">
+                <div class="form-group">
+                    <label>출발지</label>
+                    <input type="text" id="origin" name="origin" required placeholder="예: Seoul">
+                </div>
+                <div class="form-group">
+                    <label>목적지</label>
+                    <input type="text" id="destination" name="destination" required placeholder="예: Paris">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>출발일</label>
+                        <input type="date" id="departure_date" name="departure_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>귀국일</label>
+                        <input type="date" id="return_date" name="return_date" required>
+                    </div>
+                </div>                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>인원</label>
+                        <input type="number" id="people" name="people" min="1" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label>예산 (KRW)</label>
+                        <input type="number" id="budget" name="budget" placeholder="2000000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>여행 스타일</label>
+                    <input type="text" id="travel_style" name="travel_style" placeholder="예: 가족 여행, 배낭 여행">
+                </div>
+                <p class="trip-days-notice">
+                ⚠️ AI 여행 플래너는 <strong>최대 5일</strong>까지의 상세 일정을 생성합니다.
+                </p>
+                <button type="submit" class="submit-button">계획 생성</button>
+            </form>
+        </div>
+    </div>
+    <!-- 로딩 페이지 -->
+    <div id="loading-page" class="page">
+        <div class="loading-overlay"></div>
+        <div class="loading-content">
+            <div class="loading-character">✈️</div>
+            <h2 class="loading-text">여행 계획을 생성하고 있습니다...</h2>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="loading-tip">최적의 항공편과 숙소를 찾고 있어요!</p>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
