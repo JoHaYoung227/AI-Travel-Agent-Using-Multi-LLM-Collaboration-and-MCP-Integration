@@ -1,0 +1,608 @@
+<!-- result.html 전체 수정 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여행 계획 결과 - AI Travel Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d0e8f0 100%);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .result-container {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 0;
+            min-height: 100vh;
+        }
+
+        /* 왼쪽 섹션 */
+        .left-section {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        /* 오른쪽 지도 */
+        .right-section {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .marker-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day1 { background: #e74c3c; }
+        .day2 { background: #3498db; }
+        .day3 { background: #2ecc71; }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            color: white;
+        }
+
+        .result-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .result-header p {
+            color: rgba(255,255,255,0.95);
+            font-size: 1.1rem;
+            margin: 5px 0;
+            line-height: 1.6;  /* 줄 간격 */
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: white;
+            color: #3498db;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: all 0.3s;
+            font-weight: 600;
+            border: none;  /* 테두리 제거 */
+            outline: none;  /* 포커스 테두리 제거 */
+        }
+
+        .back-btn:hover {
+            background: #e8f4f8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-btn:focus {
+            outline: none;  /* 클릭 시 테두리 제거 */
+        }
+
+        /* Day 카드 */
+        .day-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e8f4f8;
+        }
+
+        .day-header h3 {
+            color: #3498db;
+            font-size: 1.5rem;
+        }
+
+        .day-cost {
+            background: #e8f4f8;
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .section-title {
+            color: #3498db;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 교통 */
+        .attraction-item {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 3px solid #87CEEB;
+        }
+
+        /* 관광지 */  
+        .attraction-item {
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+            border-left: 3px solid #6CB4E4;
+        }
+
+        /* 식사 */
+        .meal-item {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4ebf2 100%);
+            border-left: 3px solid #A4D3E8;
+        }
+
+        .transport-item h4, .attraction-box h4, .meal-item h4, .accommodation-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .attraction-item p {
+            margin: 10px 0;  /* 간격 증가 */
+        }
+
+        /* 교통 - 부드러운 파랑 */
+        .transport-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #5DADE2;
+            box-shadow: 0 2px 8px rgba(93, 173, 226, 0.15);
+        }
+
+        /* 관광지 - 부드러운 초록 */
+        .attraction-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #52BE80;
+            box-shadow: 0 2px 8px rgba(82, 190, 128, 0.15);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        /* 식사 - 부드러운 주황 */
+        .meal-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #F39C12;
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.15);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        /* 숙소 - 부드러운 보라 */
+        .accommodation-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #AF7AC5;
+            box-shadow: 0 2px 8px rgba(175, 122, 197, 0.15);
+        }
+
+        /* 제목 */
+        .transport-title { color: #5DADE2 !important; }
+        .attraction-title { color: #52BE80 !important; }
+        .meal-title { color: #F39C12 !important; }
+        .accommodation-title { color: #AF7AC5 !important; }
+
+        /* 글씨 색 - 다시 검정 */
+        .transport-item h4, .attraction-box h4, .meal-item h4, .accommodation-item h4 {
+            color: #2c3e50 !important;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .transport-item p, .attraction-box p, .meal-item p, .accommodation-item p {
+            color: #555 !important;
+            line-height: 1.6;
+        }
+
+        /* 이미지 스타일 추가 */
+        .place-image {
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .place-content {
+            flex: 1;
+        }
+
+        .cost-badge {
+            display: inline-block;
+            margin-top: 12px;  /* 위쪽 간격 추가 */
+            background: #e8f4f8;
+            color: #3498db;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* 탭 네비게이션 */
+        .tab-navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 30%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .tab-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 1200px) {
+            .result-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-section {
+                position: relative;
+                height: 400px;
+            }
+            
+            .tab-navigation {
+                left: 50%;
+            }
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCN8bgvjB0DvLgVvpk3GuNhvM_4auVgqH8"></script>
+</head>
+<body>
+    <div class="result-container">
+        <div class="left-section">
+            <div class="result-header">
+                <h1>✈️ AI Travel Planner</h1>
+                <p style="margin-top: 10px;">{{ origin }} → {{ destination }}</p>
+                <p style="margin-top: 5px;">{{ departure_date }} ~ {{ return_date }} ({{ days }}일)</p>
+                <a href="/" class="back-btn">← 새로운 계획 만들기</a>
+            </div>
+
+            {# 🔥 AI Travel Planner 상단 박스 바로 아래 - 예산 요약 카드 #}
+            {% if budget_summary %}
+            <div class="summary-cards" style="margin: 20px 0 24px;">
+            <div class="summary-card">
+                <div class="card-icon">💰</div>
+                <div class="card-content">
+                    <h4>총 예상 여행 비용 (항공 + 숙소 기준)</h4>
+                    <div class="price-big">{{ "{:,}".format(budget_summary.flight_total + budget_summary.hotel_total_krw) }}원</div>
+                    <div class="label">
+                        항공 {{ "{:,}".format(budget_summary.flight_total) }}원 · 
+                        숙소 {{ "{:,}".format(budget_summary.hotel_total_krw) }}원
+                        <br>
+                        <span style="font-size: 12px; color: #7f8c8d;">
+                        ※ 식비·관광지 입장료·항공권 제외 현지 교통비는 예산 검증에서 제외되며,
+                        화면에 표시되는 금액은 참고용 추정치입니다.
+                    </span>
+                </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                <h4>예산 대비</h4>
+                <div class="value">
+                    {% if budget_summary.is_over %}
+                    부족 {{ "{:,}".format(-budget_summary.diff) }}원
+                    {% else %}
+                    여유 {{ "{:,}".format(budget_summary.diff) }}원
+                    {% endif %}
+                </div>
+                <div class="label">
+                    사용자 예산: {{ "{:,}".format(budget_summary.user_budget) }}원
+                </div>
+                </div>
+            </div>
+            </div>
+            {% endif %}
+
+            {% if error %}
+            <div style="background: white; padding: 40px; border-radius: 15px; text-align: center;">
+                <h2 style="color: #e74c3c;">⚠️ 오류 발생</h2>
+                <p>{{ error }}</p>
+            </div>
+            {% else %}
+
+            {% if weather_info and weather_info.forecast %}
+            <div class="weather-places-wrapper">
+
+                <!-- 🌤 왼쪽: 날씨 카드 -->
+                <div class="weather-card">
+                    <h2 class="section-title-inline">🌤 여행지 날씨</h2>
+
+                    {% if weather_info.note %}
+                    <p class="weather-note">
+                        ⚠️ {{ weather_info.note }}
+                    </p>
+                    {% endif %}
+
+                    <div class="weather-details">
+                        {% for w in weather_info.forecast %}
+                        <div class="weather-row">
+                            <div>
+                                <strong>{{ w.date }}</strong><br>
+                                <span>{{ w.description }}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <span>평균 {{ w.temp_avg }}°C</span><br>
+                                <span>{{ w.temp_min }}°C ~ {{ w.temp_max }}°C</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 🎯 오른쪽: 추천 관광지 리스트 (변수명은 너 코드에 맞게 수정해) -->
+                {% if result and result.places %}
+                <div class="places-card">
+                    <h2 class="section-title-inline">🎯 추천 관광지</h2>
+                    <div class="places-list">
+                        {% for place in result.places %}
+                        <div class="place-item">
+                            <div class="place-header">
+                                <strong>{{ place.name }}</strong>
+                                {% if place.rating %}
+                                <span class="place-rating">★ {{ place.rating }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="place-address">
+                                {{ place.address }}
+                            </p>
+                            {% if place.map_url %}
+                            <a href="{{ place.map_url }}" target="_blank" class="place-link">
+                                구글 지도에서 보기
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+            {% endif %}
+
+            <h2 style="color: #2c3e50; margin-bottom: 20px; background: white; padding: 20px; border-radius: 10px;">🗓️ 상세 여행 일정</h2>
+
+            {% for day in result.final_plan.itinerary %}
+            <div class="day-card">
+                <div class="day-header">
+                    <h3>Day {{ loop.index }} ({{ day.date }})</h3>
+                </div>
+
+                {% if day.transportation %}
+                <div class="section-title transport-title">🚗 교통</div>
+                <div class="transport-item">
+                    <h4>{{ day.transportation.type }}</h4>
+                    <p>{{ day.transportation.details }}</p>
+
+                    {# ✈️ 비행기인 경우 항공권 링크 표시 (Google Flights 검색) #}
+                    {% if '비행기' in day.transportation.type
+                          and result.flights_data
+                          and result.flights_data.success
+                          and result.flights_data.flights %}
+                        {% set top_flight = result.flights_data.flights[0] %}
+                        {% if top_flight.booking_url %}
+                        <a href="{{ top_flight.booking_url }}"
+                           target="_blank"
+                           style="display:inline-block;margin-top:8px;font-size:13px;color:#3498db;">
+                            🔗 항공권 상세보기 / 예약하러 가기
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if day.attractions %}
+                <div class="section-title attraction-title">🎯 관광지</div>
+                {% for attraction in day.attractions %}
+                <div class="attraction-box">
+                    <div class="place-content">
+                        <h4>{{ attraction.name }}</h4>
+                        <p>{{ attraction.description }}</p>
+                    </div>
+                    {% if attraction.photo_url %}
+                    <img src="{{ attraction.photo_url }}" class="place-image" alt="{{ attraction.name }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if day.meals %}
+                <div class="section-title meal-title">🍽️ 식사</div>
+                {% for meal in day.meals %}
+                <div class="meal-item">
+                    <div class="place-content">
+                        <h4>{{ meal.type }}</h4>
+                        <p>{{ meal.suggestion }}</p>
+                        <!-- 🔗 구글 지도 검색 링크 (식당 이름/설명을 그대로 검색) -->
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ meal.suggestion | replace(' ', '+') }}"
+                        target="_blank"
+                        style="display:inline-block;margin-top:8px;font-size:13px;color:#3498db;">
+                            🔗 구글 지도에서 식당 위치 보기
+                        </a>
+                    </div>
+                    {% if meal.photo_url %}
+                    <img src="{{ meal.photo_url }}" class="place-image" alt="{{ meal.suggestion }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if day.accommodation and day.accommodation.name != 'N/A' %}
+                                    <div class="section-title accommodation-title">🏨 숙소</div>
+                                    <div class="accommodation-item">
+                                    <h4>{{ day.accommodation.name }}</h4>
+                                    <p>{{ day.accommodation.address }}</p>
+
+                                    {# 숙소 상세/예약 링크 - app.py에서 넣어준 booking_url 사용 #}
+                                    {% if day.accommodation.booking_url %}
+                                    <a href="{{ day.accommodation.booking_url }}"
+                                    target="_blank"
+                                    style="display:inline-block;margin-top:8px;font-size:13px;color:#3498db;">
+                                        🔗 호텔 상세보기 / 예약하러 가기
+                                    </a>
+                                    {% endif %}
+                                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% endif %}
+        </div>
+
+        <div class="right-section">
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-legend">
+                    {% if days %}
+                        {% for i in range(1, days + 1) %}
+                        <div class="legend-item">
+                            <span class="marker-icon day{{ i }}">{{ i }}</span>
+                            <span>{{ i }}일차</span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-navigation">
+        <button class="tab-btn" onclick="location.href='/info'">
+            📊 추가 정보 보기
+        </button>
+    </div>
+
+    <script>
+    function initMap() {
+        {% if result and result.places_json %}
+            const placesData = {{ result.places_json | safe }};
+            const center = placesData.length > 0 ? 
+                { lat: placesData[0].lat, lng: placesData[0].lng } : 
+                { lat: 37.5665, lng: 126.9780 };
+        {% else %}
+            const placesData = [];
+            const center = { lat: 37.5665, lng: 126.9780 };
+        {% endif %}
+        
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: center
+        });
+        
+        placesData.forEach((place) => {
+            new google.maps.Marker({
+                position: { lat: place.lat, lng: place.lng },
+                map: map,
+                label: {
+                    text: place.day.toString(),
+                    color: 'white',
+                    fontWeight: 'bold'
+                },
+                title: place.name,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 15,
+                    fillColor: place.day === 1 ? '#e74c3c' : place.day === 2 ? '#3498db' : '#2ecc71',
+                    fillOpacity: 1,
+                    strokeColor: 'white',
+                    strokeWeight: 2
+                }
+            });
+        });
+    }
+    
+    if (window.google && window.google.maps) {
+        window.onload = initMap;
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!-- info.html 수정 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추가 정보 - AI Travel Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e8f4f8 0%, #b8dce8 100%);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .info-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .info-header {
+            text-align: center;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .info-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .info-header p {
+            color: rgba(255,255,255,0.95);
+            font-size: 1.1rem;
+            margin: 5px 0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: white;
+            color: #3498db;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: all 0.3s;
+            font-weight: 600;
+            border: none;
+            outline: none;
+        }
+
+        .back-btn:hover {
+            background: #e8f4f8;
+            transform: translateY(-2px);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-card h2 {
+            color: #3498db;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weather-day {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 3px solid #3498db;
+        }
+
+        .weather-day h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .place-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        .place-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .rating {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .google-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .google-link:hover {
+            text-decoration: underline;
+        }
+
+        .hotel-item, .flight-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 25px;  /* 간격 증가 */
+            border-left: 4px solid #3498db;
+        }
+
+        .hotel-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .price-tag {
+            background: #e8f4f8;
+            color: #3498db;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .booking-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .booking-link:hover {
+            text-decoration: underline;
+        }
+
+        .list-container {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .list-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .list-container::-webkit-scrollbar-thumb {
+            background: #3498db;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-container">
+        <div class="info-header">
+            <h1>📊 추가 정보</h1>
+            <p>{{ origin }} → {{ destination }}</p>
+            <a href="javascript:history.back()" class="back-btn">← 여행 일정으로 돌아가기</a>
+        </div>
+
+        {% if error %}
+        <div class="info-card">
+            <h2>⚠️ 오류</h2>
+            <p>{{ error }}</p>
+        </div>
+        {% else %}
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h2>🌤️ 날씨 예보</h2>
+                {% if result.weather_info and result.weather_info.success %}
+                    {% if result.weather_info.forecast %}
+                        <!-- 일별 날씨 정보 -->
+                        {% for day_weather in result.weather_info.forecast %}
+                        <div class="weather-day">
+                            <h4>📅 {{ day_weather.date }}</h4>
+                            <p>🌡️ 평균: {{ day_weather.temp_avg }}°C</p>
+                            <p>📊 최저/최고: {{ day_weather.temp_min }}°C ~ {{ day_weather.temp_max }}°C</p>
+                            <p>☁️ {{ day_weather.description }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #7f8c8d;">예보 정보가 없습니다.</p>
+                    {% endif %}
+                {% else %}
+                <p style="color: #7f8c8d;">날씨 정보를 가져올 수 없습니다.</p>
+                {% endif %}
+            </div>
+
+            <!-- 추천 관광지 -->
+            <div class="info-card">
+                <h2>🎯 추천 관광지</h2>
+                <div class="list-container">
+                    {% if result.places_info and result.places_info.success %}
+                    {% for place in result.places_info.places[:5] %}
+                    <div class="place-item">
+                        <h4>{{ place.name }}</h4>
+                        <p>{{ place.address }}</p>
+                        <span class="rating">⭐ {{ place.rating }}</span>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ place.name|urlencode }}" 
+                           target="_blank" 
+                           class="google-link">
+                            🔗 구글 지도에서 보기
+                        </a>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p style="color: #7f8c8d;">관광지 정보를 가져올 수 없습니다.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 호텔 리스트 -->
+        <div class="info-card">
+            <h2>🏨 추천 호텔 리스트</h2>
+            <div class="list-container">
+                {% if result.hotels_data and result.hotels_data.success %}
+                {% for hotel in result.hotels_data.hotels %}
+                <div class="hotel-item">
+                    <div class="hotel-name">
+                        {{ hotel.name }}
+                        {% if hotel.rating and hotel.rating != 'N/A' %}
+                        <span class="rating">⭐ {{ hotel.rating }}성급</span>
+                        {% endif %}
+                    </div>
+                    <p style="color: #7f8c8d; margin: 8px 0;">{{ hotel.address }}</p>
+                    <span class="price-tag">
+                        💰 1박 {% if hotel.price.currency != 'KRW' %}{{ hotel.price.currency }} {{ "{:,}".format(hotel.price.per_night | int) }} (약 ₩{{ "{:,}".format(hotel.per_night_krw | int) }}){% else %}₩{{ "{:,}".format(hotel.price.per_night | int) }}{% endif %}
+                    </span>
+                    <p style="margin-top: 8px; color: #7f8c8d; font-size: 0.9rem;">
+                        총액: {% if hotel.price.currency != 'KRW' %}{{ hotel.price.currency }} {{ "{:,}".format(hotel.price.total | int) }} (약 ₩{{ "{:,}".format(hotel.total_krw | int) }}){% else %}₩{{ "{:,}".format(hotel.price.total | int) }}{% endif %}
+                    </p>
+                    {% if hotel.booking_url %}
+                    <a href="{{ hotel.booking_url }}" target="_blank" class="booking-link">
+                        🔗 예약 및 상세 정보 확인
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p style="color: #7f8c8d;">호텔 정보를 가져올 수 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 항공편 리스트 -->
+        <div class="info-card" style="margin-top: 25px;">
+            <h2>✈️ 추천 항공편 리스트</h2>
+            <div class="list-container">
+                {% if result.flights_data and result.flights_data.success %}
+                {% for flight in result.flights_data.flights %}
+                <div class="flight-item">
+                    <div class="hotel-name">
+                        {{ flight.validating_airline_codes | join(', ') }}
+                    </div>
+                    
+                    {% set out = flight.outbound %}
+                    <p style="font-weight: 600; color: #3498db; margin: 15px 0 10px 0;">
+                        🛫 가는 편 ({{ out.stops }}회 경유)
+                    </p>
+                    <p>{{ out.departure.airport }} {{ out.departure.time[11:16] }} → {{ out.arrival.airport }} {{ out.arrival.time[11:16] }}</p>
+                    <p style="color: #7f8c8d; font-size: 0.9rem;">소요시간: {{ out.duration }}</p>
+                    
+                    {% set inn = flight.inbound %}
+                    <p style="font-weight: 600; color: #3498db; margin: 15px 0 10px 0;">
+                        🛬 오는 편 ({{ inn.stops }}회 경유)
+                    </p>
+                    <p>{{ inn.departure.airport }} {{ inn.departure.time[11:16] }} → {{ inn.arrival.airport }} {{ inn.arrival.time[11:16] }}</p>
+                    <p style="color: #7f8c8d; font-size: 0.9rem;">소요시간: {{ inn.duration }}</p>
+                    
+                    <span class="price-tag">
+                        💵 총액: ₩{{ "{:,}".format(flight.price.total) }}
+                    </span>
+                    {% if flight.booking_url %}
+                    <a href="{{ flight.booking_url }}" target="_blank" class="booking-link">
+                        🔗 Google Flights에서 예약하기
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p style="color: #7f8c8d;">항공편 정보를 가져올 수 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+</body>
+</html>
