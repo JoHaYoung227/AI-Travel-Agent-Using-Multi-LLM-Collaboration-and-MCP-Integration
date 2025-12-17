@@ -1,0 +1,25 @@
+# Core
+requests>=2.31.0
+python-dotenv>=1.0.1
+
+# Web UI
+flask>=3.0.0
+# Optional UI (Gradio)
+gradio>=4.0.0
+
+# OpenAI SDK
+openai>=1.0.0
+
+# Google Maps / Places
+googlemaps>=4.10.0
+
+# RAG / Vector DB
+pinecone-client>=3.0.0
+sentence-transformers>=2.2.2
+
+# Dataset loader
+datasets>=2.14.0
+
+# Utils (used in some modules)
+numpy>=1.24.0
+pandas>=2.0.0
