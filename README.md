@@ -1,11 +1,11 @@
 # Multi-Agent AI Travel Planner (MCP 기반)
 
-LLM + 외부 API + RAG(호텔 리뷰) + 멀티 에이전트 협업(MCP)을 결합한 **AI 여행 일정 생성 서비스**입니다.
+LLM + 외부 API + 멀티 에이전트 협업(MCP)을 결합한 **AI 여행 일정 생성 서비스**입니다.
 
 ---
 ## 실행 방법
 
-### 1) Flask 웹앱 실행(추천)
+### 1) Flask 웹앱 실행
 
 ```bash
 python app.py
